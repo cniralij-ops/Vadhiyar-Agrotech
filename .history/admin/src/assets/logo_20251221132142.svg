@@ -1,0 +1,11 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="adminLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2f7a3a" />
+      <stop offset="100%" stop-color="#7ac943" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#0f2a17" />
+  <path d="M64 24c7 12 25 21 25 45 0 15-10 35-25 35s-25-20-25-35c0-24 18-33 25-45z" fill="url(#adminLogoGradient)" />
+  <path d="M64 50c15 0 32 16 32 32s-13 24-32 24-32-11-32-24 17-32 32-32z" fill="#1f5f2b" opacity="0.85" />
+</svg>

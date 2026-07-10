@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Local fallback schema for tsconfig",
+  "type": "object",
+  "additionalProperties": true
+}

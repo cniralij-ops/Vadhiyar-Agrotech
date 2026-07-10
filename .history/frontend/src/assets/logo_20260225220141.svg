@@ -1,0 +1,63 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">Vadhiyar Agrotech logo</title>
+  <desc id="logoDesc">Shield with protective leaf, droplet, and subtle farm tool icon</desc>
+  <defs>
+    <linearGradient id="shieldFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#73c978" />
+      <stop offset="100%" stop-color="#0f4d24" />
+    </linearGradient>
+    <linearGradient id="leafFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d8f7b0" />
+      <stop offset="100%" stop-color="#1f6b2f" />
+    </linearGradient>
+    <radialGradient id="dropletFill" cx="0.4" cy="0.3" r="0.8">
+      <stop offset="0%" stop-color="#ffe87a" />
+      <stop offset="100%" stop-color="#d09b10" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="1200" fill="white" />
+
+  <path
+    d="M600 164c-180 0-360 108-360 287v176c0 166 180 297 360 349 180-52 360-183 360-349V451c0-179-180-287-360-287z"
+    fill="url(#shieldFill)"
+    stroke="#0b301a"
+    stroke-width="18"
+    stroke-linejoin="round"
+  />
+
+  <g transform="translate(600 520)">
+    <path
+      d="M-42 -190c-90 64-166 173-166 274 0 110 74 186 166 186 92 0 166-76 166-186 0-101-76-210-166-274z"
+      fill="url(#leafFill)"
+    />
+    <path d="M0 -190v368" stroke="#0c4422" stroke-width="24" stroke-linecap="round" />
+    <path d="M18 30c70-24 128-68 174-130" stroke="#186031" stroke-width="18" stroke-linecap="round" fill="none" />
+    <path d="M-18 30c-70-24-128-68-174-130" stroke="#3f9954" stroke-width="12" stroke-linecap="round" fill="none" />
+    <path
+      d="M-220 -140c46 28 78 78 78 134"
+      stroke="#c3e46d"
+      stroke-width="16"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <path d="M-250 -170l30 30" stroke="#c3e46d" stroke-width="16" stroke-linecap="round" />
+    <path
+      d="M222 40h56c10 0 18 8 18 18v80c0 8-5 15-12 17l-62 18"
+      fill="none"
+      stroke="#0b301a"
+      stroke-width="20"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <rect x="158" y="28" width="86" height="62" rx="18" fill="#134b28" />
+    <rect x="140" y="52" width="18" height="140" rx="9" fill="#0b301a" />
+    <circle cx="222" cy="-10" r="24" fill="url(#dropletFill)" />
+    <path d="M222 -34c18 18 26 38 26 58" stroke="#f7cf42" stroke-width="8" stroke-linecap="round" fill="none" />
+  </g>
+
+  <g transform="translate(600 950)" text-anchor="middle" font-family="'Space Grotesk', 'Segoe UI', sans-serif">
+    <text y="0" font-size="140" font-weight="700" fill="#0b301a">VADHIYAR</text>
+    <text y="120" font-size="72" letter-spacing="0.38em" fill="#d09b10">AGROTECH</text>
+  </g>
+</svg>

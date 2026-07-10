@@ -1,0 +1,10 @@
+{
+  "name": "vadhiyar-agrotech",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "frontend": "npm --prefix frontend run dev",
+    "admin": "npm --prefix admin run dev",
+    "backend": "npm --prefix backend run dev"
+  }
+}

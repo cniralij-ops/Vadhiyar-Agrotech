@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int               @id @default(autoincrement())
+  name           String
+  email          String            @unique
+  phone          String            @unique
+  role           String            @default("CUSTOMER")
+  hashedPassword String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  orders         Order[]
+  loginHistory   LoginHistory[]
+  profile        CustomerProfile?
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+}
+
+model Product {
+  id          Int        @id @default(autoincrement())
+  name        String
+  slug        String     @unique
+  description String
+  price       Float
+  stock       Int        @default(0)
+  image       String
+  gallery     String     @default("[]")
+  categoryId  Int
+  category    Category   @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  user       User        @relation(fields: [userId], references: [id])
+  status     String      @default("PENDING")
+  total      Float
+  fullName   String
+  mobile     String
+  email      String
+  address    String
+  city       String
+  state      String
+  pincode    String
+  notes      String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  items      OrderItem[]
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Float
+}
+
+model LoginHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+model CustomerProfile {
+  id          Int   @id @default(autoincrement())
+  userId      Int   @unique
+  addressLine String
+  city        String
+  state       String
+  user        User  @relation(fields: [userId], references: [id])
+}
+
+model OtpRequest {
+  id        Int      @id @default(autoincrement())
+  phone     String
+  codeHash  String
+  token     String   @unique
+  purpose   String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

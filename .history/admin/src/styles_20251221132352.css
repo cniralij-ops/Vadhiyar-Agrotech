@@ -1,0 +1,174 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+:root {
+  --green-forest: #1f5f2b;
+  --green-slate: #4a7a48;
+  --muted: #f1f4ef;
+  --surface: #0f1c14;
+  --accent: #b3e8b8;
+  --border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  background: #050b06;
+  color: #fff;
+}
+
+.admin-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(15, 21, 11, 0.96);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem clamp(1rem, 2vw, 2.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-header nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-header a {
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.admin-header a.active {
+  color: var(--accent);
+}
+
+.admin-header nav button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0.1rem 0.6rem;
+}
+
+.admin-header nav button.active,
+.admin-header nav button:hover {
+  color: var(--accent);
+}
+
+.admin-content {
+  padding: 2rem clamp(1rem, 3vw, 3rem);
+  flex: 1;
+}
+
+.panel {
+  background: #0c180f;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 25px 55px rgba(6, 12, 6, 0.45);
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.85rem;
+  text-align: left;
+}
+
+.table thead th {
+  text-transform: uppercase;
+  color: var(--accent);
+  font-size: 0.75rem;
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #4ac07f, #1f5f2b);
+  border: none;
+  color: #fff;
+  padding: 0.8rem 1.2rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.input,
+textarea,
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 300px) 1fr;
+  gap: 1.5rem;
+}
+
+.admin-rail {
+  background: #07120b;
+  padding: 1.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+}
+
+.small-tag {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.status-pending {
+  color: #ffd166;
+}
+
+.status-processing {
+  color: #4ac07f;
+}
+
+.status-delivered {
+  color: #74f38b;
+}
+
+.status-cancelled {
+  color: #f17b7b;
+}
+
+@media (max-width: 900px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+}

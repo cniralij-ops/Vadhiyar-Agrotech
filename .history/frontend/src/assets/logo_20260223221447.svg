@@ -1,0 +1,13 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="100" cy="100" r="98" fill="#ffffff" stroke="#e5e5e5" stroke-width="4" />
+  <g transform="translate(40 40) scale(0.6)">
+    <path d="M120 10c-12 12-22 24-29 37-8-13-18-25-30-37-14 14-26 36-26 62 0 35 23 62 52 62s52-27 52-62c0-26-11-48-25-62z" fill="#0f6934" />
+    <path d="M61 75c0-25-16-47-36-55-9 13-15 33-15 56 0 35 21 64 47 64 20 0 37-12 44-30-25-2-40-19-40-35z" fill="#65a637" />
+    <path d="M113 67c0 20-15 37-37 38 7 18 24 30 44 30 26 0 47-29 47-64 0-23-6-43-15-56-20 8-36 30-36 55z" fill="#f6b625" />
+    <path d="M90 25c0 20-11 36-25 36-13 0-24-16-24-36 0-19 11-35 24-35 14 0 25 16 25 35z" fill="#f1c40f" />
+    <path d="M98 25c0 20 11 36 24 36 14 0 25-16 25-36 0-19-11-35-25-35-13 0-24 16-24 35z" fill="#f39c12" />
+    <rect x="37" y="145" width="100" height="12" rx="6" fill="#0f6934" />
+    <text x="87" y="135" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="700" fill="#0f6934">VADHIYAR</text>
+    <text x="87" y="165" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="18" letter-spacing="3" fill="#e58e27">AGROTECH</text>
+  </g>
+</svg>

@@ -1,0 +1,90 @@
+<svg width="1600" height="1600" viewBox="0 0 1600 1600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">Vadhiyar Agrotech logo</title>
+  <desc id="logoDesc">Leaf and wheat emblem with sunrise circuits and typography</desc>
+  <defs>
+    <linearGradient id="leafGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a4f1f" />
+      <stop offset="100%" stop-color="#4bd274" />
+    </linearGradient>
+    <linearGradient id="leafHighlight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#b9f18d" />
+      <stop offset="100%" stop-color="#0c8a3e" />
+    </linearGradient>
+    <linearGradient id="wheatGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd783" />
+      <stop offset="100%" stop-color="#d8840d" />
+    </linearGradient>
+    <linearGradient id="sunGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe88a" />
+      <stop offset="100%" stop-color="#f0a423" />
+    </linearGradient>
+    <linearGradient id="fieldGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c551c" />
+      <stop offset="100%" stop-color="#1f792e" />
+    </linearGradient>
+    <linearGradient id="fieldHighlight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#47c06f" />
+      <stop offset="100%" stop-color="#0b6b1f" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(800 540)">
+    <path
+      d="M-360 220c120-80 720-80 840 0-160 140-680 140-840 0z"
+      fill="url(#fieldGradient)"
+    />
+    <path
+      d="M-300 250c100-60 520-60 620 0-150 90-470 90-620 0z"
+      fill="url(#fieldHighlight)"
+    />
+    <g>
+      <path
+        d="M-320-60c-170 140-200 360-40 480 150 40 240-30 270-150 18-74 4-200-160-330z"
+        fill="url(#leafGradient)"
+      />
+      <path
+        d="M-230-10c-100 170-40 320 120 360 60-120 50-260-120-360z"
+        fill="url(#leafHighlight)"
+      />
+    </g>
+    <g>
+      <path
+        d="M320-70c150 120 150 330 0 420l-60 40-60-40c-150-90-150-300 0-420l60-40z"
+        fill="url(#wheatGradient)"
+        stroke="#c46d04"
+        stroke-width="10"
+        stroke-linejoin="round"
+      />
+      <path d="M280-20l120 120" stroke="#f9d07a" stroke-width="28" stroke-linecap="round" />
+      <path d="M260 40l120 120" stroke="#f9d07a" stroke-width="24" stroke-linecap="round" />
+      <path d="M240 100l120 120" stroke="#f9d07a" stroke-width="22" stroke-linecap="round" />
+      <path d="M220 160l120 120" stroke="#f9d07a" stroke-width="20" stroke-linecap="round" />
+    </g>
+    <g>
+      <path d="M-120-60h240a200 200 0 0 1-190 150 200 200 0 0 1-190-150z" fill="url(#sunGradient)" />
+      <circle cx="-80" cy="-60" r="20" fill="#ffe88a" stroke="#c27806" stroke-width="6" />
+      <circle cx="0" cy="-90" r="30" fill="#ffe88a" stroke="#c27806" stroke-width="6" />
+      <circle cx="80" cy="-60" r="20" fill="#ffe88a" stroke="#c27806" stroke-width="6" />
+      <path d="M-80-60V-200" stroke="#f0a423" stroke-width="18" stroke-linecap="round" />
+      <path d="M0-90V-260" stroke="#f0a423" stroke-width="20" stroke-linecap="round" />
+      <path d="M80-60V-200" stroke="#f0a423" stroke-width="18" stroke-linecap="round" />
+      <path d="M-140-30h-130" stroke="#f0a423" stroke-width="16" stroke-linecap="round" />
+      <path d="M140-30h130" stroke="#f0a423" stroke-width="16" stroke-linecap="round" />
+      <circle cx="-140" cy="-30" r="14" fill="#ffe88a" stroke="#c27806" stroke-width="4" />
+      <circle cx="140" cy="-30" r="14" fill="#ffe88a" stroke="#c27806" stroke-width="4" />
+      <circle cx="-80" cy="-200" r="16" fill="#ffe88a" stroke="#c27806" stroke-width="4" />
+      <circle cx="0" cy="-260" r="20" fill="#ffe88a" stroke="#c27806" stroke-width="5" />
+      <circle cx="80" cy="-200" r="16" fill="#ffe88a" stroke="#c27806" stroke-width="4" />
+    </g>
+  </g>
+
+  <g text-anchor="middle" font-family="'Cinzel', 'Playfair Display', 'Times New Roman', serif" fill="#0c3f21">
+    <text x="800" y="1120" font-size="190" font-weight="700">VADHIYAR</text>
+  </g>
+
+  <text x="800" y="1225" font-family="'Space Grotesk', 'Segoe UI', sans-serif" font-size="96" letter-spacing="0.55em" text-anchor="middle" fill="#d07f0a">
+    AGROTECH
+  </text>
+
+  <path d="M500 1290c170 90 430 90 600 0" stroke="#d07f0a" stroke-width="20" fill="none" stroke-linecap="round" />
+</svg>
