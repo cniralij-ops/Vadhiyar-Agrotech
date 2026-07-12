@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { Product } from "../types";
 
 const ProductCard = ({ product }: { product: Product }) => {
+
+  console.log(product);   // <-- YE LINE ADD KARO
+
   return (
     <Link to={`/products/${product.slug}`} className="product-card product-card--catalogue">
       <img src={product.image} alt={product.name} />
