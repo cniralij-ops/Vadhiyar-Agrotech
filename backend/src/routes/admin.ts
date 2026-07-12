@@ -45,8 +45,8 @@ const handleUploadErrors = (uploadHandler: express.RequestHandler) =>
 const uploadGalleryMiddleware = handleUploadErrors(upload.array("gallery", 10));
 const uploadProductImageMiddleware = handleUploadErrors(upload.single("image"));
 
-const buildImageUrl = (req: Request, filename: string) =>
-  `${req.protocol}://${req.get("host")}/uploads/gallery/${filename}`;
+const buildImageUrl = (_req: Request, filename: string) =>
+  `https://vadhiyar-agrotech.onrender.com/uploads/gallery/${filename}`;
 
 const parseGalleryField = (raw: unknown): string[] | undefined => {
   if (typeof raw === "undefined") {
@@ -138,7 +138,7 @@ router.post("/products/gallery", uploadGalleryMiddleware, async (req: Request, r
   if (!files || files.length === 0) {
     return res.status(400).json({ message: "No files uploaded" });
   }
-  const baseUrl = `${req.protocol}://${req.get("host")}/uploads/gallery`;
+  const baseUrl = "https://vadhiyar-agrotech.onrender.com/uploads/gallery";
   const urls = files.map((file) => `${baseUrl}/${file.filename}`);
   res.status(201).json({ urls });
 });
