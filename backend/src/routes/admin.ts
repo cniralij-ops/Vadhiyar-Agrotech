@@ -48,6 +48,20 @@ const uploadProductImageMiddleware = handleUploadErrors(upload.single("image"));
 const buildImageUrl = (_req: Request, filename: string) =>
   `https://vadhiyar-agrotech.onrender.com/uploads/gallery/${filename}`;
 
+const normalizeImageUrl = (image: string) => {
+  if (!image) return image;
+
+  return image
+    .replace(
+      /^http:\/\/localhost:4000\/uploads\/gallery/i,
+      "https://vadhiyar-agrotech.onrender.com/uploads/gallery"
+    )
+    .replace(
+      /^https?:\/\/127\.0\.0\.1:4000\/uploads\/gallery/i,
+      "https://vadhiyar-agrotech.onrender.com/uploads/gallery"
+    );
+};
+
 const parseGalleryField = (raw: unknown): string[] | undefined => {
   if (typeof raw === "undefined") {
     return undefined;
@@ -155,7 +169,7 @@ router.post("/products", uploadProductImageMiddleware, async (req, res) => {
   if (req.file) {
     imageUrl = buildImageUrl(req, req.file.filename);
   } else if (typeof req.body.image === "string" && req.body.image.trim().length > 0) {
-    imageUrl = req.body.image.trim();
+    imageUrl = normalizeImageUrl(req.body.image.trim());
   }
 
   if (!imageUrl) {
@@ -215,7 +229,7 @@ router.put("/products/:id", uploadProductImageMiddleware, async (req, res) => {
   if (req.file) {
     imageUrl = buildImageUrl(req, req.file.filename);
   } else if (typeof req.body.image === "string" && req.body.image.trim().length > 0) {
-    imageUrl = req.body.image.trim();
+    imageUrl = normalizeImageUrl(req.body.image.trim());
   }
 
   const payload: Record<string, unknown> = {};
