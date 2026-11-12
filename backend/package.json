@@ -10,7 +10,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "npm run build && node dist/deploy-schema.js",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "owner:provision": "ts-node prisma/provision-owner.ts"
+    "owner:provision": "npm run build && node dist/provision-owner.js"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

@@ -29,10 +29,11 @@ A multilingual agricultural storefront with public product browsing and an owner
 - Set backend `DATABASE_URL` to the PostgreSQL connection string used by the running API and owner provisioning. Backend configuration loads `backend/.env`; host environment variables take precedence.
 - Set `NODE_ENV=production` and `JWT_SECRET` to a random value of at least 32 characters on the backend host. The API fails at startup if the production database URL or JWT secret is missing or invalid.
 - The existing migration history contains SQLite SQL while the production datasource is PostgreSQL, so it must not be replayed against production. The additive product-management schema is applied idempotently when the backend starts, or explicitly with `npm --prefix backend run prisma:deploy`.
-- To provision or reset the owner without changing product data, set `OWNER_EMAIL`, `OWNER_NAME`, `OWNER_PHONE`, and a unique `OWNER_PASSWORD` (at least 14 characters) in the backend environment, then run `npm --prefix backend run owner:provision`. Do not commit environment files or passwords.
+- When `OWNER_PASSWORD` is set in the backend environment, startup provisions or resets the configured owner without changing product data. Use a unique password of at least 14 characters; it is stored as a bcrypt hash. Do not commit or share environment values.
+- For manual provisioning, run `npm --prefix backend run owner:provision` after the backend dependencies are installed. This command builds the backend and uses the configured `DATABASE_URL`.
 - Product and owner-provisioning commands must use the same `DATABASE_URL` as the running API.
 
 ## Next steps after setup
 1. Configure the backend PostgreSQL URL and production JWT secret.
 2. Build and start the backend; startup applies the additive product-management schema before accepting requests.
-3. Configure the owner environment and run `npm --prefix backend run owner:provision` against the same database before owner sign-in.
+3. Configure `OWNER_PASSWORD` privately; the backend provisions the owner automatically on startup before accepting requests.
