@@ -13,6 +13,7 @@ const app = express();
 
 const uploadsDir = path.resolve(__dirname, "..", "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
+app.set("trust proxy", 1);
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 

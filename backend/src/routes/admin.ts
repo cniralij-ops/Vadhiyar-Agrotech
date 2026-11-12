@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import { prisma } from "../utils/prisma";
-import { authenticate, requireRole } from "../middleware/auth";
+import { authenticate, AuthRequest, requireRole } from "../middleware/auth";
+import { config } from "../config";
 import { productSchema, productUpdateSchema, orderStatusSchema } from "../utils/validators";
 import { withParsedGallery, withParsedGalleryList } from "../utils/product";
 import multer, { Options } from "multer";
@@ -8,6 +9,13 @@ import fs from "fs";
 import path from "path";
 
 const router = express.Router();
+
+const requireOwner: express.RequestHandler = (req: AuthRequest, res, next) => {
+  if (!req.user || req.user.email.toLowerCase() !== config.ownerEmail) {
+    return res.status(403).json({ message: "Owner access required" });
+  }
+  next();
+};
 
 const galleryDir = path.resolve(__dirname, "..", "..", "uploads", "gallery");
 fs.mkdirSync(galleryDir, { recursive: true });
@@ -88,7 +96,7 @@ const parseGalleryField = (raw: unknown): string[] | undefined => {
 
 const serializeGallery = (gallery?: string[]) => JSON.stringify(gallery ?? []);
 
-router.use(authenticate, requireRole("ADMIN"));
+router.use(authenticate, requireRole("ADMIN"), requireOwner);
 
 router.get("/dashboard", async (_req, res) => {
   const customerCount = await prisma.user.count({ where: { role: "CUSTOMER" } });

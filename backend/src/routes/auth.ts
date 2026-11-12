@@ -1,14 +1,49 @@
-import express from "express";
+import express, { Request, RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { prisma } from "../utils/prisma";
 import { config } from "../config";
-import { registerSchema, loginSchema, otpSendSchema, otpVerifySchema, otpCompleteSchema } from "../utils/validators";
+import { registerSchema, loginSchema, ownerLoginSchema, otpSendSchema, otpVerifySchema, otpCompleteSchema } from "../utils/validators";
 import { authenticate, AuthRequest, isValidRole } from "../middleware/auth";
 import { sendOtpSms, getSmsLogs } from "../utils/sms";
 
 const router = express.Router();
+
+const OWNER_LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const OWNER_LOGIN_MAX_ATTEMPTS = 5;
+const ownerLoginAttempts = new Map<string, { count: number; windowStartedAt: number; blockedUntil: number }>();
+const getOwnerLoginClientIp = (req: Request) => req.ip ?? req.socket.remoteAddress ?? "unknown";
+
+const ownerLoginLimiter: RequestHandler = (req, res, next) => {
+  const attempt = ownerLoginAttempts.get(getOwnerLoginClientIp(req));
+  if (attempt && attempt.blockedUntil > Date.now()) {
+    res.set("Retry-After", String(Math.ceil((attempt.blockedUntil - Date.now()) / 1000)));
+    return res.status(429).json({ message: "Too many sign-in attempts. Try again later." });
+  }
+  next();
+};
+
+const recordOwnerLoginFailure = (ip: string) => {
+  const now = Date.now();
+  let attempt = ownerLoginAttempts.get(ip);
+  if (!attempt || now - attempt.windowStartedAt >= OWNER_LOGIN_WINDOW_MS) {
+    if (!attempt && ownerLoginAttempts.size >= 5000) {
+      const oldestIp = ownerLoginAttempts.keys().next().value;
+      if (typeof oldestIp === "string") ownerLoginAttempts.delete(oldestIp);
+    }
+    attempt = { count: 0, windowStartedAt: now, blockedUntil: 0 };
+    ownerLoginAttempts.set(ip, attempt);
+  }
+  attempt.count += 1;
+  if (attempt.count >= OWNER_LOGIN_MAX_ATTEMPTS) {
+    attempt.count = 0;
+    attempt.windowStartedAt = now;
+    attempt.blockedUntil = now + OWNER_LOGIN_WINDOW_MS;
+  }
+};
+
+const clearOwnerLoginFailures = (ip: string) => ownerLoginAttempts.delete(ip);
 
 const createToken = (params: { id: number; role: "ADMIN" | "CUSTOMER"; email: string; name: string }) =>
   jwt.sign({ sub: String(params.id), role: params.role, email: params.email, name: params.name }, config.jwtSecret, {
@@ -309,13 +344,42 @@ router.post("/login", async (req, res) => {
   });
 });
 
+router.post("/owner-login", ownerLoginLimiter, async (req, res) => {
+  const parse = ownerLoginSchema.safeParse(req.body);
+  const clientIp = getOwnerLoginClientIp(req);
+  if (!parse.success) {
+    recordOwnerLoginFailure(clientIp);
+    return res.status(400).json({ message: "Invalid owner credentials" });
+  }
+
+  const owner = await prisma.user.findUnique({ where: { email: config.ownerEmail } });
+  if (!owner || owner.role !== "ADMIN" || !(await bcrypt.compare(parse.data.password, owner.hashedPassword))) {
+    recordOwnerLoginFailure(clientIp);
+    return res.status(401).json({ message: "Invalid owner credentials" });
+  }
+
+  clearOwnerLoginFailures(clientIp);
+  const token = createToken({ id: owner.id, role: "ADMIN", email: owner.email, name: owner.name });
+  await prisma.loginHistory.create({
+    data: { userId: owner.id, action: "OWNER_LOGIN", ip: req.ip }
+  });
+  res.status(200).json({
+    token,
+    user: { id: owner.id, name: owner.name, email: owner.email, role: "ADMIN", phone: owner.phone }
+  });
+});
+
 router.get("/me", authenticate, async (req: AuthRequest, res) => {
   if (!req.user) return res.status(401).end();
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
     select: { id: true, name: true, email: true, phone: true, role: true }
   });
-  res.status(200).json(user);
+  if (!user) return res.status(401).json({ message: "User not found" });
+  res.status(200).json({
+    ...user,
+    isOwner: user.role === "ADMIN" && user.email.toLowerCase() === config.ownerEmail
+  });
 });
 
 // Debug endpoint: View SMS delivery logs (remove in production)

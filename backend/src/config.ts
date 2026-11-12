@@ -7,6 +7,7 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET ?? "change-me",
   databaseUrl: process.env.DATABASE_URL ?? "file:./dev.db",
   isProduction: process.env.NODE_ENV === "production",
+  ownerEmail: (process.env.OWNER_EMAIL ?? "vadhiyaragro@gmail.com").trim().toLowerCase(),
   sms: {
     provider: process.env.SMS_PROVIDER ?? "",
     fallbackProvider: process.env.SMS_FALLBACK_PROVIDER ?? "",

@@ -57,6 +57,10 @@ export const loginSchema = z
     }
   });
 
+export const ownerLoginSchema = z.object({
+  password: z.string().min(14).max(256)
+});
+
 export const otpSendSchema = z.object({
   phone: z.string().min(6)
 });
