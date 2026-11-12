@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
 import { useTranslation } from "../contexts/LanguageContext";
@@ -38,7 +38,7 @@ const CartPage = () => {
                 <td>
                   <strong>{item.product.name}</strong>
                   <p style={{ margin: 0 }}>
-                    ₹{item.product.price} • {item.product.stock ? `${item.product.stock} left` : t("outOfStock")}
+                    ₹{item.product.price.toLocaleString("en-IN")} · {item.product.stock ? `${item.product.stock} left` : t("outOfStock")}
                   </p>
                 </td>
                 <td>
@@ -50,7 +50,7 @@ const CartPage = () => {
                     onChange={(event) => updateQuantity(item.product.id, Number(event.target.value))}
                   />
                 </td>
-                <td>₹{item.product.price * item.quantity}</td>
+                <td>₹{(item.product.price * item.quantity).toLocaleString("en-IN")}</td>
                 <td>
                   <button type="button" className="button-primary" onClick={() => removeFromCart(item.product.id)}>
                     {t("remove")}
@@ -62,7 +62,7 @@ const CartPage = () => {
         </table>
         <div style={{ textAlign: "right", marginTop: "1rem" }}>
           <strong>
-            {t("orderSummary")}: ₹{subTotal.toFixed(2)}
+            {t("orderSummary")}: ₹{subTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </strong>
           <div>
             <Link to="/checkout" className="button-primary" style={{ marginTop: "0.5rem" }}>
@@ -76,3 +76,4 @@ const CartPage = () => {
 };
 
 export default CartPage;
+

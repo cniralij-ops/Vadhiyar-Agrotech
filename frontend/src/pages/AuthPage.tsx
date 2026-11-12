@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/api";
@@ -184,7 +184,7 @@ const AuthPage = () => {
           </div>
           {error && <div className="alert">{error}</div>}
           <button className="button-primary" onClick={handleSendOtp} disabled={loading}>
-            {loading ? "Sending…" : "Send OTP"}
+            {loading ? "Sendingâ€¦" : "Send OTP"}
           </button>
         </div>
       ) : (
@@ -238,7 +238,7 @@ const AuthPage = () => {
               </div>
               {error && <div className="alert">{error}</div>}
               <button className="button-primary" onClick={handleAddressSubmit} disabled={loading}>
-                {loading ? "Creating Account…" : "Complete Registration"}
+                {loading ? "Creating Accountâ€¦" : "Complete Registration"}
               </button>
             </>
           ) : (
@@ -278,7 +278,7 @@ const AuthPage = () => {
               {error && <div className="alert">{error}</div>}
 
               <button className="button-primary" onClick={handleComplete} disabled={loading}>
-                {loading ? "Verifying…" : isNewUser ? "Continue to Address" : "Login"}
+                {loading ? "Verifyingâ€¦" : isNewUser ? "Continue to Address" : "Login"}
               </button>
             </>
           )}
@@ -289,4 +289,5 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
+
 

@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../services/api";
 import { Product } from "../types";
 import { useTranslation } from "../contexts/LanguageContext";
+import ProductImage from "../components/ProductImage";
+import { BUSINESS_INFO } from "../data/businessInfo";
 
 const ProductDetailPage = () => {
   const t = useTranslation();
@@ -31,13 +33,16 @@ const ProductDetailPage = () => {
   return (
     <section className="form-card">
       <div style={{ display: "grid", gap: "1.2rem" }}>
-        <img src={product.image} alt={product.name} style={{ width: "100%", maxWidth: 420, borderRadius: 20, objectFit: "cover", aspectRatio: "4/3" }} />
+        <ProductImage src={product.image} alt={product.name} priority className="product-image--detail" />
         <div>
           <h1>{product.name}</h1>
-          <strong style={{ fontSize: "1.75rem" }}>₹{product.price}</strong>
+          <strong style={{ fontSize: "1.75rem" }}>₹{product.price.toLocaleString("en-IN")}</strong>
+          <p className={product.isAvailable && product.stock > 0 ? "product-availability" : "product-availability product-availability--out"}>
+            {product.isAvailable && product.stock > 0 ? t("inStock") : t("outOfStock")}
+          </p>
           <div className="catalogue-callout" style={{ marginTop: "1rem" }}>
             <p>{t("catalogueMessage")}</p>
-            <a href="tel:9825213351" className="button-primary">
+            <a href={BUSINESS_INFO.phoneLink} className="button-primary">
               {t("callNow")}
             </a>
           </div>
@@ -48,3 +53,4 @@ const ProductDetailPage = () => {
 };
 
 export default ProductDetailPage;
+

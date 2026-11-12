@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { api } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { Order } from "../types";
@@ -43,7 +43,7 @@ const OrdersPage = () => {
                   {t("status")}: {t(order.status.toLowerCase() as "pending" | "processing" | "delivered" | "cancelled")}
                 </p>
                 <p>{order.fullName}</p>
-                <p>{t("total")}: ₹{order.total.toFixed(2)}</p>
+                <p>{t("total")}: ₹{order.total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
               <div>
                 <strong>{new Date(order.createdAt).toLocaleDateString()}</strong>
@@ -64,3 +64,4 @@ const OrdersPage = () => {
 };
 
 export default OrdersPage;
+

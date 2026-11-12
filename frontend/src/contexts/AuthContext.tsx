@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+﻿import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api } from "../services/api";
 
 export interface AuthUser {
@@ -7,6 +7,7 @@ export interface AuthUser {
   email: string;
   role: "CUSTOMER" | "ADMIN";
   phone?: string;
+  isOwner?: boolean;
 }
 
 type AuthState = {
@@ -28,6 +29,7 @@ type OtpCompletePayload = { token: string; phone: string; code: string; name?: s
 
 interface AuthContextValue extends AuthState {
   login: (payload: LoginPayload) => Promise<void>;
+  loginAsOwner: (payload: { password: string }) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   loginWithOtp: (payload: OtpCompletePayload) => Promise<void>;
   logout: () => void;
@@ -38,6 +40,7 @@ const defaultState: AuthState = { user: null, token: null };
 const AuthContext = createContext<AuthContextValue>({
   ...defaultState,
   login: async () => {},
+  loginAsOwner: async () => { throw new Error("Owner sign-in is unavailable."); },
   register: async () => {},
   loginWithOtp: async () => {},
   logout: () => {}
@@ -72,6 +75,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setState({ user: data.user, token: data.token });
   };
 
+  const loginAsOwner = async (payload: { password: string }) => {
+    const data = await api.post<AuthPayload>("/api/auth/owner-login", payload);
+    if (data.user.role !== "ADMIN") {
+      throw new Error("This account is not authorized to manage products.");
+    }
+    setState({ user: data.user, token: data.token });
+  };
+
   const register = async (payload: RegisterPayload) => {
     const data = await api.post<AuthPayload>("/api/auth/register", payload);
     setState({ user: data.user, token: data.token });
@@ -84,9 +95,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = () => setState(defaultState);
 
-  const value = useMemo(() => ({ ...state, login, logout, register, loginWithOtp }), [state]);
+  const value = useMemo(() => ({ ...state, login, loginAsOwner, logout, register, loginWithOtp }), [state]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);
+

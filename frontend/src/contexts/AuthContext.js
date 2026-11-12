@@ -5,6 +5,7 @@ const defaultState = { user: null, token: null };
 const AuthContext = createContext({
     ...defaultState,
     login: async () => { },
+    loginAsOwner: async () => { throw new Error("Owner sign-in is unavailable."); },
     register: async () => { },
     loginWithOtp: async () => { },
     logout: () => { }
@@ -36,6 +37,13 @@ export const AuthProvider = ({ children }) => {
         const data = await api.post("/api/auth/login", payload);
         setState({ user: data.user, token: data.token });
     };
+    const loginAsOwner = async (payload) => {
+        const data = await api.post("/api/auth/owner-login", payload);
+        if (data.user.role !== "ADMIN") {
+            throw new Error("This account is not authorized to manage products.");
+        }
+        setState({ user: data.user, token: data.token });
+    };
     const register = async (payload) => {
         const data = await api.post("/api/auth/register", payload);
         setState({ user: data.user, token: data.token });
@@ -45,7 +53,7 @@ export const AuthProvider = ({ children }) => {
         setState({ user: data.user, token: data.token });
     };
     const logout = () => setState(defaultState);
-    const value = useMemo(() => ({ ...state, login, logout, register, loginWithOtp }), [state]);
+    const value = useMemo(() => ({ ...state, login, loginAsOwner, logout, register, loginWithOtp }), [state]);
     return _jsx(AuthContext.Provider, { value: value, children: children });
 };
 export const useAuth = () => useContext(AuthContext);

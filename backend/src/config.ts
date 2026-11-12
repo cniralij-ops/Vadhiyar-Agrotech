@@ -1,13 +1,30 @@
 import dotenv from "dotenv";
+import path from "path";
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
+
+const isProduction = process.env.NODE_ENV === "production";
+const databaseUrl =
+  process.env.DATABASE_URL?.trim() ||
+  "postgresql://postgres:postgres@localhost:5432/vadhiyar?schema=public";
+const jwtSecret = process.env.JWT_SECRET?.trim() || "change-me";
+
+if (!/^postgres(?:ql)?:\/\//i.test(databaseUrl)) {
+  throw new Error("DATABASE_URL must be a PostgreSQL connection URL.");
+}
+if (isProduction && !process.env.DATABASE_URL?.trim()) {
+  throw new Error("DATABASE_URL must be configured for the production backend.");
+}
+if (isProduction && (jwtSecret.length < 32 || /^(change-me|replace-with)/i.test(jwtSecret))) {
+  throw new Error("JWT_SECRET must be set to a random value of at least 32 characters in production.");
+}
 
 export const config = {
   port: Number(process.env.PORT ?? 4000),
-  jwtSecret: process.env.JWT_SECRET ?? "change-me",
-  databaseUrl: process.env.DATABASE_URL ?? "file:./dev.db",
-  isProduction: process.env.NODE_ENV === "production",
+  jwtSecret,
+  databaseUrl,
   ownerEmail: (process.env.OWNER_EMAIL ?? "vadhiyaragro@gmail.com").trim().toLowerCase(),
+  isProduction,
   sms: {
     provider: process.env.SMS_PROVIDER ?? "",
     fallbackProvider: process.env.SMS_FALLBACK_PROVIDER ?? "",

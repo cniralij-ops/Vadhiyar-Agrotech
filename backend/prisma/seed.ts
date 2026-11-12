@@ -1,8 +1,11 @@
 /// <reference types="node" />
+import { config } from "../src/config";
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { provisionOwner } from "./owner";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: { db: { url: config.databaseUrl } }
+});
 
 const categories = [
   { name: "Fertilizers", slug: "fertilizers", description: "Certified fertilizers for healthy harvests." },
@@ -89,34 +92,11 @@ async function main() {
     });
   }
 
-  const adminEmail = "cniralij@gmail.com";
-  const hashedPassword = await bcrypt.hash("nirali@123", 12);
-  const admin = await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: { hashedPassword },
-    create: {
-      name: "Vadhiyar Admin",
-      email: adminEmail,
-      phone: "9999999999",
-      hashedPassword,
-      role: "ADMIN"
-    }
-  });
-
-  await prisma.customerProfile.upsert({
-    where: { userId: admin.id },
-    update: {
-      addressLine: "Admin Office",
-      city: "Rajkot",
-      state: "Gujarat"
-    },
-    create: {
-      userId: admin.id,
-      addressLine: "Admin Office",
-      city: "Rajkot",
-      state: "Gujarat"
-    }
-  });
+  if (process.env.OWNER_PASSWORD) {
+    await provisionOwner(prisma);
+  } else {
+    console.warn("OWNER_PASSWORD is unset; owner account provisioning was skipped.");
+  }
 
   console.log("Seeding completed");
 }

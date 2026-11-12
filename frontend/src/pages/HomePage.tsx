@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { api } from "../services/api";
 import ProductCard from "../components/ProductCard";
 import { Product } from "../types";
 import { useTranslation } from "../contexts/LanguageContext";
-import brandLogo from "../assets/logo.svg";
+import brandLogo from "../assets/vadhiyar-logo.jpeg";
+import { BUSINESS_INFO } from "../data/businessInfo";
 
 const HomePage = () => {
   const t = useTranslation();
+  const { hash } = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -19,6 +22,12 @@ const HomePage = () => {
         setLoadError("Unable to load products. Start backend on port 4000.");
       });
   }, []);
+
+  useEffect(() => {
+    if (hash === "#about") {
+      document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [hash]);
 
   return (
     <>
@@ -44,8 +53,11 @@ const HomePage = () => {
           <h2>{t("products")}</h2>
         </div>
         <div className="catalogue-callout catalogue-callout--banner">
-          <span className="catalogue-callout__icon">📞</span>
-          <strong>CALL ON: 9825213351</strong>
+          <p>{t("supportLine")}</p>
+          <a className="catalogue-callout__phone" href={BUSINESS_INFO.phoneLink}>
+            <span>{BUSINESS_INFO.phone}</span>
+            <span>{t("callNow")}</span>
+          </a>
         </div>
         {loadError && <p style={{ color: "#c0382b" }}>{loadError}</p>}
         <div className="card-grid">
@@ -54,8 +66,31 @@ const HomePage = () => {
           ))}
         </div>
       </section>
+
+      <section className="about-section" id="about" aria-labelledby="about-title">
+        <div className="about-section__intro">
+          <span className="products-eyebrow">{t("aboutUs")}</span>
+          <h2 id="about-title">{BUSINESS_INFO.name}</h2>
+          <p>{t("aboutDescription")}</p>
+          <p className="about-section__owner">
+            <strong>{BUSINESS_INFO.owner}</strong> · {t("proprietor")}
+          </p>
+          <p className="about-section__legal" lang="gu">{BUSINESS_INFO.legalNameGujarati}</p>
+          <p className="about-section__slogan" lang="gu">{BUSINESS_INFO.sloganGujarati}</p>
+        </div>
+        <div className="about-section__details">
+          <h3>{t("services")}</h3>
+          <ul className="about-section__services">
+            {BUSINESS_INFO.services.map((service) => <li key={service}>{service}</li>)}
+          </ul>
+          <div className="about-section__values" aria-label="Business values">
+            {BUSINESS_INFO.values.map((value) => <span className="tag" key={value}>{value}</span>)}
+          </div>
+        </div>
+      </section>
     </>
   );
 };
 
 export default HomePage;
+

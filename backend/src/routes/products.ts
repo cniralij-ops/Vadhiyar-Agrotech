@@ -5,9 +5,18 @@ import { withParsedGallery, withParsedGalleryList } from "../utils/product";
 
 const router = express.Router();
 
+router.get("/images/:id", async (req, res) => {
+  const asset = await prisma.mediaAsset.findUnique({ where: { id: req.params.id } });
+  if (!asset) {
+    return res.status(404).json({ message: "Image not found" });
+  }
+  res.set("Cache-Control", "public, max-age=31536000, immutable");
+  res.type(asset.mimeType).send(asset.data);
+});
+
 router.get("/", async (req, res) => {
   const { category, search } = req.query as { category?: string; search?: string };
-  const filters: Prisma.ProductWhereInput = {};
+  const filters: Prisma.ProductWhereInput = { isVisible: true };
 
   if (category) {
     filters.category = { slug: category };
@@ -23,14 +32,14 @@ router.get("/", async (req, res) => {
   const products = await prisma.product.findMany({
     where: filters,
     include: { category: true },
-    orderBy: { createdAt: "desc" }
+    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }]
   });
   res.json(withParsedGalleryList(products));
 });
 
 router.get("/categories", async (_req, res) => {
   const categories = await prisma.category.findMany({
-    include: { products: { select: { id: true } } },
+    include: { products: { where: { isVisible: true }, select: { id: true } } },
     orderBy: { createdAt: "desc" }
   });
   res.json(categories);
@@ -40,7 +49,7 @@ router.get("/category/:slug/products", async (req, res) => {
   const { slug } = req.params;
   const category = await prisma.category.findUnique({
     where: { slug },
-    include: { products: { include: { category: true } } }
+    include: { products: { where: { isVisible: true }, include: { category: true } } }
   });
   if (!category) {
     return res.status(404).json({ message: "Category not found" });
@@ -50,8 +59,8 @@ router.get("/category/:slug/products", async (req, res) => {
 
 router.get("/:slug", async (req, res) => {
   const { slug } = req.params;
-  const product = await prisma.product.findUnique({
-    where: { slug },
+  const product = await prisma.product.findFirst({
+    where: { slug, isVisible: true },
     include: { category: true }
   });
   if (!product) {

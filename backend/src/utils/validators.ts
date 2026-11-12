@@ -86,9 +86,12 @@ export const productSchema = z.object({
   description: z.string().min(10),
   price: z.number().positive(),
   stock: z.number().int().nonnegative(),
-  image: z.string().url(),
+  image: z.string().url().or(z.literal("")).default(""),
   categoryId: z.number().int().positive(),
-  gallery: z.array(z.string().url()).optional()
+  gallery: z.array(z.string().url()).optional(),
+  isAvailable: z.boolean().default(true),
+  isFeatured: z.boolean().default(false),
+  isVisible: z.boolean().default(true)
 });
 
 export const productUpdateSchema = z.object({
@@ -96,9 +99,12 @@ export const productUpdateSchema = z.object({
   description: z.string().min(10).optional(),
   price: z.number().positive().optional(),
   stock: z.number().int().nonnegative().optional(),
-  image: z.string().url().optional(),
+  image: z.string().url().or(z.literal("")).optional(),
   categoryId: z.number().int().positive().optional(),
-  gallery: z.array(z.string().url()).optional()
+  gallery: z.array(z.string().url()).optional(),
+  isAvailable: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  isVisible: z.boolean().optional()
 });
 
 export const orderSchema = z.object({

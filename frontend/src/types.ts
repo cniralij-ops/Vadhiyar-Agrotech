@@ -1,4 +1,4 @@
-export interface Product {
+﻿export interface Product {
   id: number;
   name: string;
   slug: string;
@@ -7,6 +7,9 @@ export interface Product {
   stock: number;
   image: string;
   gallery?: string[];
+  isAvailable: boolean;
+  isFeatured: boolean;
+  isVisible: boolean;
   category: { id: number; name: string; slug: string };
 }
 
@@ -34,3 +37,4 @@ export interface Order {
   createdAt: string;
   items: OrderItem[];
 }
+

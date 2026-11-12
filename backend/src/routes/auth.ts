@@ -346,23 +346,20 @@ router.post("/login", async (req, res) => {
 
 router.post("/owner-login", ownerLoginLimiter, async (req, res) => {
   const parse = ownerLoginSchema.safeParse(req.body);
-  const clientIp = getOwnerLoginClientIp(req);
   if (!parse.success) {
-    recordOwnerLoginFailure(clientIp);
+    recordOwnerLoginFailure(getOwnerLoginClientIp(req));
     return res.status(400).json({ message: "Invalid owner credentials" });
   }
 
   const owner = await prisma.user.findUnique({ where: { email: config.ownerEmail } });
   if (!owner || owner.role !== "ADMIN" || !(await bcrypt.compare(parse.data.password, owner.hashedPassword))) {
-    recordOwnerLoginFailure(clientIp);
+    recordOwnerLoginFailure(getOwnerLoginClientIp(req));
     return res.status(401).json({ message: "Invalid owner credentials" });
   }
 
-  clearOwnerLoginFailures(clientIp);
+  clearOwnerLoginFailures(getOwnerLoginClientIp(req));
   const token = createToken({ id: owner.id, role: "ADMIN", email: owner.email, name: owner.name });
-  await prisma.loginHistory.create({
-    data: { userId: owner.id, action: "OWNER_LOGIN", ip: req.ip }
-  });
+  await prisma.loginHistory.create({ data: { userId: owner.id, action: "OWNER_LOGIN", ip: req.ip } });
   res.status(200).json({
     token,
     user: { id: owner.id, name: owner.name, email: owner.email, role: "ADMIN", phone: owner.phone }

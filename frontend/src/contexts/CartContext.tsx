@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+﻿import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Product } from "../types";
 
 export interface CartItem {
@@ -43,16 +43,18 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   }, [items]);
 
   const addToCart = (product: Product, quantity: number = 1) => {
+    if (!product.isAvailable || product.stock < 1 || quantity < 1) return;
     setItems((prev) => {
+      const requestedQuantity = Math.min(Math.floor(quantity), product.stock);
       const exists = prev.find((item) => item.product.id === product.id);
       if (exists) {
         return prev.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: Math.min(item.quantity + quantity, product.stock) }
+            ? { ...item, product, quantity: Math.min(item.quantity + requestedQuantity, product.stock) }
             : item
         );
       }
-      return [...prev, { product, quantity }];
+      return [...prev, { product, quantity: requestedQuantity }];
     });
   };
 
@@ -88,3 +90,4 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useCart = () => useContext(CartContext);
+

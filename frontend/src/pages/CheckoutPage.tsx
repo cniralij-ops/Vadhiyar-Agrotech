@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { api } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
@@ -157,7 +157,7 @@ const CheckoutPage = () => {
         </div>
         <div style={{ textAlign: "right" }}>
           <p>
-            {t("orderSummary")}: ₹{subTotal.toFixed(2)}
+            {t("orderSummary")}: ₹{subTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <button className="button-primary" type="submit" disabled={loading || !items.length}>
             {t("placeOrder")}
@@ -170,3 +170,4 @@ const CheckoutPage = () => {
 };
 
 export default CheckoutPage;
+

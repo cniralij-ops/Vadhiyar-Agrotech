@@ -27,14 +27,17 @@ export const CartProvider = ({ children }) => {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     }, [items]);
     const addToCart = (product, quantity = 1) => {
+        if (!product.isAvailable || product.stock < 1 || quantity < 1)
+            return;
         setItems((prev) => {
+            const requestedQuantity = Math.min(Math.floor(quantity), product.stock);
             const exists = prev.find((item) => item.product.id === product.id);
             if (exists) {
                 return prev.map((item) => item.product.id === product.id
-                    ? { ...item, quantity: Math.min(item.quantity + quantity, product.stock) }
+                    ? { ...item, product, quantity: Math.min(item.quantity + requestedQuantity, product.stock) }
                     : item);
             }
-            return [...prev, { product, quantity }];
+            return [...prev, { product, quantity: requestedQuantity }];
         });
     };
     const updateQuantity = (productId, quantity) => {

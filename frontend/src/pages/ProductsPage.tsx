@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { api } from "../services/api";
 import { Product } from "../types";
 import { useTranslation } from "../contexts/LanguageContext";
+import { BUSINESS_INFO } from "../data/businessInfo";
 
 const ProductsPage = () => {
   const t = useTranslation();
@@ -12,28 +13,44 @@ const ProductsPage = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") ?? "");
+  const appliedSearch = searchParams.get("search") ?? "";
 
   useEffect(() => {
+    setSearchTerm(appliedSearch);
+  }, [appliedSearch]);
+
+  useEffect(() => {
+    let active = true;
     setLoading(true);
     setLoadError(null);
     const query = new URLSearchParams();
-    if (searchTerm) query.set("search", searchTerm);
+    if (appliedSearch) query.set("search", appliedSearch);
     api
       .get<Product[]>(`/api/products${query.toString() ? `?${query.toString()}` : ""}`)
-      .then((data) => setProducts(data))
+      .then((data) => {
+        if (active) setProducts(data);
+      })
       .catch((error) => {
+        if (!active) return;
         console.error(error);
         setProducts([]);
         setLoadError("Unable to load products. Please check backend server and API URL.");
       })
-      .finally(() => setLoading(false));
-  }, [searchTerm]);
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [appliedSearch]);
 
   const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const normalizedSearch = searchTerm.trim();
     setSearchParams((params) => {
-      if (searchTerm) {
-        params.set("search", searchTerm);
+      if (normalizedSearch) {
+        params.set("search", normalizedSearch);
       } else {
         params.delete("search");
       }
@@ -41,24 +58,21 @@ const ProductsPage = () => {
     });
   };
 
-  const headerLabel = useMemo(() => {
-    if (searchTerm) {
-      return `${t("searchPlaceholder")} · ${searchTerm}`;
-    }
-    return t("products");
-  }, [searchTerm, t]);
-
   return (
-    <section>
-      <div className="section-title" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
-        <h2>{headerLabel}</h2>
-        <form onSubmit={handleSearch} style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+    <section className="products-page">
+      <div className="products-intro">
+        <div className="products-intro__copy">
+          <span className="products-eyebrow">{t("brandStatement")}</span>
+          <h1>{appliedSearch ? `${t("searchPlaceholder")}: ${appliedSearch}` : t("products")}</h1>
+          <p>{t("catalogueIntro")}</p>
+        </div>
+        <form className="product-search" onSubmit={handleSearch} role="search">
           <input
             type="search"
             placeholder={t("searchPlaceholder")}
+            aria-label={t("searchPlaceholder")}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            style={{ padding: "0.65rem 0.8rem", borderRadius: "12px", border: "1px solid var(--border)" }}
           />
           <button className="button-primary" type="submit">
             {t("viewProducts")}
@@ -67,25 +81,37 @@ const ProductsPage = () => {
       </div>
 
       <div className="catalogue-callout catalogue-callout--banner">
-        <span className="catalogue-callout__icon">📞</span>
-        <strong>CALL ON: 9825213351</strong>
+        <p>{t("supportLine")}</p>
+        <a className="catalogue-callout__phone" href={BUSINESS_INFO.phoneLink}>
+          <span>{BUSINESS_INFO.phone}</span>
+          <span>{t("callNow")}</span>
+        </a>
       </div>
 
       {loading ? (
-        <p>{t("loading")}</p>
+        <div className="product-skeleton-grid" role="status" aria-label={t("loading")}>
+          {Array.from({ length: 6 }, (_, index) => (
+            <div className="product-skeleton" key={index}>
+              <span className="product-skeleton__image" />
+              <span className="product-skeleton__line" />
+              <span className="product-skeleton__line product-skeleton__line--short" />
+            </div>
+          ))}
+        </div>
       ) : loadError ? (
-        <p style={{ color: "#c0382b" }}>{loadError}</p>
+        <p className="products-error" role="alert">{loadError}</p>
       ) : products.length ? (
         <div className="card-grid">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {products.map((product, index) => (
+            <ProductCard key={product.id} product={product} priority={index < 4} />
           ))}
         </div>
       ) : (
-        <p>{t("noProducts")}</p>
+        <p className="products-empty">{t("noProducts")}</p>
       )}
     </section>
   );
 };
 
 export default ProductsPage;
+

@@ -44,6 +44,9 @@ router.post("/", async (req: AuthRequest, res) => {
       if (!product) {
         throw new Error("One or more products not found");
       }
+      if (!product.isVisible || !product.isAvailable) {
+        throw new Error(`${product.name} is not available for ordering.`);
+      }
       if (product.stock < requestedQty) {
         throw new Error(`Insufficient stock for ${product.name}`);
       }
@@ -63,7 +66,7 @@ router.post("/", async (req: AuthRequest, res) => {
     const order = await prisma.$transaction(async (tx) => {
       for (const [productId, requestedQty] of stockRequests.entries()) {
         const result = await tx.product.updateMany({
-          where: { id: productId, stock: { gte: requestedQty } },
+          where: { id: productId, isVisible: true, isAvailable: true, stock: { gte: requestedQty } },
           data: { stock: { decrement: requestedQty } }
         });
         if (result.count === 0) {

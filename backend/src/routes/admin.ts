@@ -1,12 +1,11 @@
 import express, { NextFunction, Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../utils/prisma";
 import { authenticate, AuthRequest, requireRole } from "../middleware/auth";
 import { config } from "../config";
 import { productSchema, productUpdateSchema, orderStatusSchema } from "../utils/validators";
 import { withParsedGallery, withParsedGalleryList } from "../utils/product";
 import multer, { Options } from "multer";
-import fs from "fs";
-import path from "path";
 
 const router = express.Router();
 
@@ -16,17 +15,6 @@ const requireOwner: express.RequestHandler = (req: AuthRequest, res, next) => {
   }
   next();
 };
-
-const galleryDir = path.resolve(__dirname, "..", "..", "uploads", "gallery");
-fs.mkdirSync(galleryDir, { recursive: true });
-const galleryStorage = multer.diskStorage({
-  destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) =>
-    cb(null, galleryDir),
-  filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
-    const safeName = file.originalname.replace(/[^a-z0-9\.\-]+/gi, "_");
-    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`);
-  }
-});
 
 const ACCEPTED_IMAGE_MIME_TYPES = new Set<string>(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
 
@@ -38,13 +26,37 @@ const imageOnlyFilter: Options["fileFilter"] = (_req, file, cb) => {
   }
 };
 
-const upload = multer({ storage: galleryStorage, fileFilter: imageOnlyFilter });
+const hasValidImageSignature = (file: Express.Multer.File) => {
+  const buffer = file.buffer;
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (file.mimetype === "image/png") {
+    return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  }
+  if (file.mimetype === "image/webp") {
+    return buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP";
+  }
+  return false;
+};
+
+const normalizeMimeType = (mimeType: string) => mimeType === "image/jpg" ? "image/jpeg" : mimeType;
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: imageOnlyFilter,
+  limits: { fileSize: 5 * 1024 * 1024, files: 10 }
+});
 
 const handleUploadErrors = (uploadHandler: express.RequestHandler) =>
   (req: Request, res: Response, next: NextFunction) => {
     uploadHandler(req, res, (error?: unknown) => {
       if (error) {
         return res.status(400).json({ message: error instanceof Error ? error.message : "File upload failed" });
+      }
+      const files = req.file ? [req.file] : Array.isArray(req.files) ? req.files : [];
+      if (files.some((file) => !hasValidImageSignature(file))) {
+        return res.status(400).json({ message: "The uploaded file is not a valid JPG, PNG, or WEBP image." });
       }
       next();
     });
@@ -53,8 +65,17 @@ const handleUploadErrors = (uploadHandler: express.RequestHandler) =>
 const uploadGalleryMiddleware = handleUploadErrors(upload.array("gallery", 10));
 const uploadProductImageMiddleware = handleUploadErrors(upload.single("image"));
 
-const buildImageUrl = (_req: Request, filename: string) =>
-  `https://vadhiyar-agrotech.onrender.com/uploads/gallery/${filename}`;
+const buildImageUrl = (req: Request, assetId: string) => {
+  const protocol = req.get("x-forwarded-proto")?.split(",")[0] ?? req.protocol;
+  return `${protocol}://${req.get("host")}/api/products/images/${assetId}`;
+};
+
+const saveImageAsset = async (req: Request, file: Express.Multer.File) => {
+  const asset = await prisma.mediaAsset.create({
+    data: { mimeType: normalizeMimeType(file.mimetype), data: file.buffer }
+  });
+  return buildImageUrl(req, asset.id);
+};
 
 const normalizeImageUrl = (image: string) => {
   if (!image) return image;
@@ -96,7 +117,27 @@ const parseGalleryField = (raw: unknown): string[] | undefined => {
 
 const serializeGallery = (gallery?: string[]) => JSON.stringify(gallery ?? []);
 
-router.use(authenticate, requireRole("ADMIN"), requireOwner);
+const normalizeBoolean = (value: unknown) => {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return value;
+};
+
+const isKnownPrismaError = (error: unknown): error is Prisma.PrismaClientKnownRequestError =>
+  error instanceof Prisma.PrismaClientKnownRequestError;
+
+const createProductSlug = async (name: string) => {
+  const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "product";
+  let slug = baseSlug;
+  let suffix = 1;
+  while (await prisma.product.findUnique({ where: { slug }, select: { id: true } })) {
+    slug = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+  return slug;
+};
+
+router.use(authenticate, requireRole("ADMIN"));
 
 router.get("/dashboard", async (_req, res) => {
   const customerCount = await prisma.user.count({ where: { role: "CUSTOMER" } });
@@ -150,22 +191,26 @@ router.put("/orders/:id/status", async (req, res) => {
   }
 });
 
-router.get("/products", async (_req, res) => {
+router.get("/products", requireOwner, async (_req, res) => {
   const products = await prisma.product.findMany({ include: { category: true } });
   res.json(withParsedGalleryList(products));
 });
 
-router.post("/products/gallery", uploadGalleryMiddleware, async (req: Request, res: Response) => {
+router.post("/products/gallery", requireOwner, uploadGalleryMiddleware, async (req: Request, res: Response) => {
   const files = req.files as Express.Multer.File[] | undefined;
   if (!files || files.length === 0) {
     return res.status(400).json({ message: "No files uploaded" });
   }
-  const baseUrl = "https://vadhiyar-agrotech.onrender.com/uploads/gallery";
-  const urls = files.map((file) => `${baseUrl}/${file.filename}`);
-  res.status(201).json({ urls });
+  try {
+    const urls = await Promise.all(files.map((file) => saveImageAsset(req, file)));
+    res.status(201).json({ urls });
+  } catch (error) {
+    console.error("Failed to store product images", error);
+    res.status(500).json({ message: "Failed to store product images" });
+  }
 });
 
-router.post("/products", uploadProductImageMiddleware, async (req, res) => {
+router.post("/products", requireOwner, uploadProductImageMiddleware, async (req, res) => {
   let galleryList: string[] = [];
   try {
     galleryList = parseGalleryField(req.body.gallery) ?? [];
@@ -173,25 +218,23 @@ router.post("/products", uploadProductImageMiddleware, async (req, res) => {
     return res.status(400).json({ message: (error as Error).message });
   }
 
-  let imageUrl: string | undefined;
-  if (req.file) {
-    imageUrl = buildImageUrl(req, req.file.filename);
-  } else if (typeof req.body.image === "string" && req.body.image.trim().length > 0) {
-    imageUrl = normalizeImageUrl(req.body.image.trim());
-  }
-
-  if (!imageUrl) {
-    return res.status(400).json({ message: "Product image is required" });
-  }
-
   const payload = {
     name: req.body.name,
     description: req.body.description,
     price: Number(req.body.price),
     stock: Number(req.body.stock),
-    image: imageUrl,
+    image: typeof req.body.image === "string" ? normalizeImageUrl(req.body.image.trim()) : "",
     categoryId: Number(req.body.categoryId),
-    gallery: galleryList
+    gallery: galleryList,
+    ...(typeof req.body.isAvailable === "undefined"
+      ? {}
+      : { isAvailable: normalizeBoolean(req.body.isAvailable) }),
+    ...(typeof req.body.isFeatured === "undefined"
+      ? {}
+      : { isFeatured: normalizeBoolean(req.body.isFeatured) }),
+    ...(typeof req.body.isVisible === "undefined"
+      ? {}
+      : { isVisible: normalizeBoolean(req.body.isVisible) })
   };
 
   const parse = productSchema.safeParse(payload);
@@ -200,28 +243,37 @@ router.post("/products", uploadProductImageMiddleware, async (req, res) => {
   }
 
   try {
+    const category = await prisma.category.findUnique({ where: { id: parse.data.categoryId }, select: { id: true } });
+    if (!category) {
+      return res.status(400).json({ message: "Category not found" });
+    }
+    const imageUrl = req.file ? await saveImageAsset(req, req.file) : parse.data.image;
     const product = await prisma.product.create({
       data: {
         name: parse.data.name,
-        slug: parse.data.name
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, ""),
+        slug: await createProductSlug(parse.data.name),
         description: parse.data.description,
         price: parse.data.price,
         stock: parse.data.stock,
-        image: parse.data.image,
+        image: imageUrl,
         gallery: serializeGallery(parse.data.gallery),
+        isAvailable: parse.data.isAvailable,
+        isFeatured: parse.data.isFeatured,
+        isVisible: parse.data.isVisible,
         category: { connect: { id: parse.data.categoryId } }
       }
     });
     res.status(201).json(withParsedGallery(product));
   } catch (error) {
+    if (isKnownPrismaError(error) && error.code === "P2002") {
+      return res.status(409).json({ message: "A product with this name already exists." });
+    }
+    console.error("Failed to create product", error);
     res.status(500).json({ message: "Failed to create product" });
   }
 });
 
-router.put("/products/:id", uploadProductImageMiddleware, async (req, res) => {
+router.put("/products/:id", requireOwner, uploadProductImageMiddleware, async (req, res) => {
   const { id } = req.params;
 
   let galleryList: string[] | undefined;
@@ -233,21 +285,17 @@ router.put("/products/:id", uploadProductImageMiddleware, async (req, res) => {
     return res.status(400).json({ message: (error as Error).message });
   }
 
-  let imageUrl: string | undefined;
-  if (req.file) {
-    imageUrl = buildImageUrl(req, req.file.filename);
-  } else if (typeof req.body.image === "string" && req.body.image.trim().length > 0) {
-    imageUrl = normalizeImageUrl(req.body.image.trim());
-  }
-
   const payload: Record<string, unknown> = {};
   if (typeof req.body.name !== "undefined") payload.name = req.body.name;
   if (typeof req.body.description !== "undefined") payload.description = req.body.description;
   if (typeof req.body.price !== "undefined") payload.price = Number(req.body.price);
   if (typeof req.body.stock !== "undefined") payload.stock = Number(req.body.stock);
   if (typeof req.body.categoryId !== "undefined") payload.categoryId = Number(req.body.categoryId);
-  if (typeof imageUrl !== "undefined") payload.image = imageUrl;
+  if (typeof req.body.image === "string") payload.image = normalizeImageUrl(req.body.image.trim());
   if (typeof galleryList !== "undefined") payload.gallery = galleryList;
+  for (const field of ["isAvailable", "isFeatured", "isVisible"] as const) {
+    if (typeof req.body[field] !== "undefined") payload[field] = normalizeBoolean(req.body[field]);
+  }
 
   const parse = productUpdateSchema.safeParse(payload);
   if (!parse.success) {
@@ -256,6 +304,9 @@ router.put("/products/:id", uploadProductImageMiddleware, async (req, res) => {
 
   try {
     const updateData: Record<string, unknown> = { ...parse.data };
+    if (req.file) {
+      updateData.image = await saveImageAsset(req, req.file);
+    }
     if (Object.prototype.hasOwnProperty.call(parse.data, "gallery")) {
       updateData.gallery = serializeGallery(parse.data.gallery ?? []);
     }
@@ -265,16 +316,33 @@ router.put("/products/:id", uploadProductImageMiddleware, async (req, res) => {
     });
     res.json(withParsedGallery(product));
   } catch (error) {
-    res.status(404).json({ message: "Product not found" });
+    if (isKnownPrismaError(error)) {
+      if (error.code === "P2025") return res.status(404).json({ message: "Product not found" });
+      if (error.code === "P2002") return res.status(409).json({ message: "A product with this name already exists." });
+      if (error.code === "P2003") return res.status(400).json({ message: "Category not found" });
+    }
+    console.error("Failed to update product", error);
+    res.status(500).json({ message: "Failed to update product" });
   }
 });
 
-router.delete("/products/:id", async (req, res) => {
+router.delete("/products/:id", requireOwner, async (req, res) => {
   try {
-    await prisma.product.delete({ where: { id: Number(req.params.id) } });
+    const id = Number(req.params.id);
+    const product = await prisma.product.findUnique({ where: { id }, select: { id: true } });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    const orderCount = await prisma.orderItem.count({ where: { productId: id } });
+    if (orderCount > 0) {
+      await prisma.product.update({ where: { id }, data: { isVisible: false } });
+      return res.status(200).json({ archived: true });
+    }
+    await prisma.product.delete({ where: { id } });
     res.status(204).end();
   } catch (error) {
-    res.status(404).json({ message: "Product not found" });
+    console.error("Failed to delete product", error);
+    res.status(500).json({ message: "Failed to delete product" });
   }
 });
 

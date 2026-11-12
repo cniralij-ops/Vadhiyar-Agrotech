@@ -39,11 +39,21 @@ model Product {
   stock       Int        @default(0)
   image       String
   gallery     String     @default("[]")
+  isAvailable Boolean    @default(true)
+  isFeatured  Boolean    @default(false)
+  isVisible   Boolean    @default(true)
   categoryId  Int
   category    Category   @relation(fields: [categoryId], references: [id])
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   orderItems  OrderItem[]
+}
+
+model MediaAsset {
+  id        String   @id @default(uuid())
+  mimeType  String
+  data      Bytes
+  createdAt DateTime @default(now())
 }
 
 model Order {

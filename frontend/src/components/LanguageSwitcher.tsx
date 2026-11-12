@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { useLanguage, Language } from "../contexts/LanguageContext";
 
 const buttons: Record<Language, string> = {
@@ -26,3 +26,4 @@ const LanguageSwitcher = () => {
 };
 
 export default LanguageSwitcher;
+

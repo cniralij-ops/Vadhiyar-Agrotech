@@ -1,6 +1,6 @@
-import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import logo from "../assets/logo.svg";
+﻿import React from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import logo from "../assets/vadhiyar-logo.jpeg";
 import { useAuth } from "../contexts/AuthContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "../contexts/LanguageContext";
@@ -12,25 +12,25 @@ const Header = () => {
 
   return (
     <header className="header-bar">
-      <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
-        <img src={logo} alt="Vadhiyar Agrotech" width={48} height={48} />
-        <div>
-          <strong style={{ display: "block" }}>Vadhiyar Agrotech</strong>
-          <small style={{ color: "var(--muted)" }}>{t("brandStatement")}</small>
-          <small style={{ color: "var(--muted)", display: "block", marginTop: 2 }}>
-            ઘી વટિયાર કૃષિ ઉત્પાદન અને ખરીદ વેચાણ સહકારી મંડળી લિ. રાધનપુર
-          </small>
-        </div>
-      </div>
-      <nav className="nav-links">
+      <Link to="/" className="header-brand">
+        <img src={logo} alt="" width={44} height={44} />
+        <strong>Vadhiyar Agrotech</strong>
+      </Link>
+      <nav className="nav-links" aria-label="Main navigation">
         <NavLink to="/" className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}>
           {t("home")}
         </NavLink>
         <NavLink to="/products" className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}>
           {t("products")}
         </NavLink>
+        <NavLink to="/#about" className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}>
+          {t("aboutUs")}
+        </NavLink>
+        <NavLink to="/contact" className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}>
+          {t("contactUs")}
+        </NavLink>
       </nav>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+      <div className="header-actions">
         <LanguageSwitcher />
         {user ? (
           <button className="button-primary" onClick={() => logout()}>
@@ -45,3 +45,4 @@ const Header = () => {
 };
 
 export default Header;
+
