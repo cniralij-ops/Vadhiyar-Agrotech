@@ -10,12 +10,12 @@ const EMPTY_FORM = {
     name: "",
     description: "",
     price: "",
-    stock: "0",
+    stock: "",
     image: "",
     categoryId: "",
-    isAvailable: true,
+    isAvailable: false,
     isFeatured: false,
-    isVisible: true
+    isVisible: false
 };
 const OwnerProductsPage = () => {
     const { user, token, loginAsOwner, logout } = useAuth();
@@ -93,9 +93,6 @@ const OwnerProductsPage = () => {
             ]);
             setProducts(productRows);
             setCategories(categoryRows);
-            setForm((previous) => previous.categoryId || !categoryRows.length
-                ? previous
-                : { ...previous, categoryId: String(categoryRows[0].id) });
         }
         catch (loadError) {
             setError(loadError instanceof Error ? loadError.message : "Products could not be loaded.");
@@ -124,7 +121,7 @@ const OwnerProductsPage = () => {
         }
     };
     const resetForm = () => {
-        setForm({ ...EMPTY_FORM, categoryId: categories.length ? String(categories[0].id) : "" });
+        setForm(EMPTY_FORM);
         setEditing(null);
         setSelectedImage(null);
         replaceImagePreview(null);
@@ -139,7 +136,7 @@ const OwnerProductsPage = () => {
             price: String(product.price),
             stock: String(product.stock),
             image: product.image,
-            categoryId: String(product.category.id),
+            categoryId: product.category ? String(product.category.id) : "",
             isAvailable: product.isAvailable,
             isFeatured: product.isFeatured,
             isVisible: product.isVisible
@@ -190,10 +187,10 @@ const OwnerProductsPage = () => {
             const payload = {
                 name: form.name.trim(),
                 description: form.description.trim(),
-                price: Number(form.price),
-                stock: Number(form.stock),
+                price: form.price.trim() ? Number(form.price) : 0,
+                stock: form.stock.trim() ? Number(form.stock) : 0,
                 image,
-                categoryId: Number(form.categoryId),
+                categoryId: form.categoryId ? Number(form.categoryId) : null,
                 isAvailable: form.isAvailable,
                 isFeatured: form.isFeatured,
                 isVisible: form.isVisible
@@ -206,7 +203,7 @@ const OwnerProductsPage = () => {
                 await api.post("/api/admin/products", payload, token);
                 setMessage("Product added.");
             }
-            setForm({ ...EMPTY_FORM, categoryId: categories.length ? String(categories[0].id) : "" });
+            setForm(EMPTY_FORM);
             setEditing(null);
             setSelectedImage(null);
             replaceImagePreview(null);
@@ -243,10 +240,10 @@ const OwnerProductsPage = () => {
     if (!ownerVerified) {
         return (_jsx("section", { className: "owner-page owner-login", children: _jsxs("div", { className: "owner-login__card", children: [_jsx("span", { className: "products-eyebrow", children: t("ownerLogin") }), _jsx("h1", { children: "Vadhiyar Agrotech" }), _jsx("p", { children: "Sign in with the authorized owner account to manage the public product catalog." }), _jsxs("form", { onSubmit: handleOwnerLogin, children: [_jsx("label", { htmlFor: "owner-password", children: "Password" }), _jsx("input", { id: "owner-password", type: "password", autoComplete: "current-password", minLength: 14, required: true, value: password, onChange: (event) => setPassword(event.target.value) }), loginError && _jsx("p", { className: "owner-message owner-message--error", role: "alert", children: loginError }), _jsx("button", { className: "button-primary", type: "submit", disabled: loginLoading, children: loginLoading ? "Signing in..." : t("ownerLogin") })] })] }) }));
     }
-    return (_jsxs("section", { className: "owner-page", children: [_jsxs("div", { className: "owner-page__header", children: [_jsxs("div", { children: [_jsx("span", { className: "products-eyebrow", children: "Owner access" }), _jsx("h1", { children: "Product management" }), _jsx("p", { children: "Changes are saved to the catalog and appear on the public website." })] }), _jsx("button", { className: "button-secondary", type: "button", onClick: logout, children: "Sign out" })] }), error && _jsx("p", { className: "owner-message owner-message--error", role: "alert", children: error }), message && _jsx("p", { className: "owner-message", role: "status", children: message }), _jsxs("form", { className: "owner-form", onSubmit: saveProduct, children: [_jsxs("div", { className: "owner-form__heading", children: [_jsxs("div", { children: [_jsx("h2", { children: editing ? "Edit product" : "Add a product" }), _jsx("p", { children: "Images are optional; products without a photo use the site placeholder." })] }), editing && _jsx("button", { className: "button-secondary", type: "button", onClick: resetForm, children: "Cancel edit" })] }), _jsxs("div", { className: "owner-form__grid", children: [_jsxs("label", { children: ["Product name", _jsx("input", { required: true, minLength: 3, value: form.name, onChange: (event) => setForm({ ...form, name: event.target.value }) })] }), _jsxs("label", { children: ["Category", _jsxs("select", { required: true, value: form.categoryId, onChange: (event) => setForm({ ...form, categoryId: event.target.value }), children: [_jsx("option", { value: "", disabled: true, children: "Select a category" }), categories.map((category) => _jsx("option", { value: category.id, children: category.name }, category.id))] })] }), _jsxs("label", { children: ["Price (\u20B9)", _jsx("input", { type: "number", min: "0.01", step: "0.01", required: true, value: form.price, onChange: (event) => setForm({ ...form, price: event.target.value }) })] }), _jsxs("label", { children: ["Stock quantity", _jsx("input", { type: "number", min: "0", step: "1", required: true, value: form.stock, onChange: (event) => setForm({ ...form, stock: event.target.value }) })] }), _jsxs("label", { className: "owner-form__wide", children: ["Description", _jsx("textarea", { required: true, minLength: 10, rows: 4, value: form.description, onChange: (event) => setForm({ ...form, description: event.target.value }) })] }), _jsxs("label", { className: "owner-form__wide", children: ["Product image (JPG, PNG, WEBP \u00B7 max 5 MB)", _jsx("input", { type: "file", accept: "image/jpeg,image/png,image/webp", onChange: handleImageChange })] }), _jsxs("div", { className: "owner-form__preview", children: [_jsx(ProductImage, { src: imagePreview ?? "", alt: form.name || "Product image preview" }), _jsx("button", { className: "text-button", type: "button", onClick: () => {
+    return (_jsxs("section", { className: "owner-page", children: [_jsxs("div", { className: "owner-page__header", children: [_jsxs("div", { children: [_jsx("span", { className: "products-eyebrow", children: "Owner access" }), _jsx("h1", { children: "Product management" }), _jsx("p", { children: "Changes are saved to the catalog and appear on the public website." })] }), _jsx("button", { className: "button-secondary", type: "button", onClick: logout, children: "Sign out" })] }), error && _jsx("p", { className: "owner-message owner-message--error", role: "alert", children: error }), message && _jsx("p", { className: "owner-message", role: "status", children: message }), _jsxs("form", { className: "owner-form", onSubmit: saveProduct, children: [_jsxs("div", { className: "owner-form__heading", children: [_jsxs("div", { children: [_jsx("h2", { children: editing ? "Edit product" : "Add a product" }), _jsx("p", { children: "Images are optional; products without a photo use the site placeholder." })] }), editing && _jsx("button", { className: "button-secondary", type: "button", onClick: resetForm, children: "Cancel edit" })] }), _jsxs("div", { className: "owner-form__grid", children: [_jsxs("label", { children: ["Product name", _jsx("input", { value: form.name, onChange: (event) => setForm({ ...form, name: event.target.value }) })] }), _jsxs("label", { children: ["Category", _jsxs("select", { value: form.categoryId, onChange: (event) => setForm({ ...form, categoryId: event.target.value }), children: [_jsx("option", { value: "", children: "No category" }), categories.map((category) => _jsx("option", { value: category.id, children: category.name }, category.id))] })] }), _jsxs("label", { children: ["Price (\u20B9)", _jsx("input", { type: "number", min: "0", step: "0.01", value: form.price, onChange: (event) => setForm({ ...form, price: event.target.value }) })] }), _jsxs("label", { children: ["Stock quantity", _jsx("input", { type: "number", min: "0", step: "1", value: form.stock, onChange: (event) => setForm({ ...form, stock: event.target.value }) })] }), _jsxs("label", { className: "owner-form__wide", children: ["Description", _jsx("textarea", { rows: 4, value: form.description, onChange: (event) => setForm({ ...form, description: event.target.value }) })] }), _jsxs("label", { className: "owner-form__wide", children: ["Product image (JPG, PNG, WEBP \u00B7 max 5 MB)", _jsx("input", { type: "file", accept: "image/jpeg,image/png,image/webp", onChange: handleImageChange })] }), _jsxs("div", { className: "owner-form__preview", children: [_jsx(ProductImage, { src: imagePreview ?? "", alt: form.name || "Product image preview" }), _jsx("button", { className: "text-button", type: "button", onClick: () => {
                                             setSelectedImage(null);
                                             setForm((previous) => ({ ...previous, image: "" }));
                                             replaceImagePreview(null);
-                                        }, children: "Remove image" })] }), _jsxs("fieldset", { className: "owner-form__options", children: [_jsx("legend", { children: "Product settings" }), _jsxs("label", { children: [_jsx("input", { type: "checkbox", checked: form.isAvailable, onChange: (event) => setForm({ ...form, isAvailable: event.target.checked }) }), " Available for ordering"] }), _jsxs("label", { children: [_jsx("input", { type: "checkbox", checked: form.isFeatured, onChange: (event) => setForm({ ...form, isFeatured: event.target.checked }) }), " Featured product"] }), _jsxs("label", { children: [_jsx("input", { type: "checkbox", checked: form.isVisible, onChange: (event) => setForm({ ...form, isVisible: event.target.checked }) }), " Visible in public catalog"] })] })] }), _jsx("div", { className: "owner-form__actions", children: _jsx("button", { className: "button-primary", type: "submit", disabled: saving || !categories.length, children: saving ? "Saving..." : editing ? "Save changes" : "Add product" }) })] }), _jsxs("section", { className: "owner-products", "aria-labelledby": "owner-products-title", children: [_jsxs("div", { className: "owner-form__heading", children: [_jsxs("div", { children: [_jsx("h2", { id: "owner-products-title", children: "Catalog products" }), _jsxs("p", { children: [products.length, " product", products.length === 1 ? "" : "s"] })] }), _jsx("button", { className: "button-secondary", type: "button", onClick: () => void loadData(), disabled: dataLoading, children: dataLoading ? "Loading..." : "Refresh" })] }), dataLoading && !products.length ? (_jsx("p", { role: "status", children: t("loading") })) : products.length ? (_jsx("div", { className: "owner-product-list", children: products.map((product) => (_jsxs("article", { className: "owner-product", children: [_jsx(ProductImage, { src: product.image, alt: product.name }), _jsxs("div", { className: "owner-product__details", children: [_jsx("span", { className: "product-card__category", children: product.category.name }), _jsx("h3", { children: product.name }), _jsxs("p", { children: ["\u20B9", product.price.toLocaleString("en-IN"), " \u00B7 ", product.stock, " in stock"] }), _jsxs("div", { className: "owner-product__tags", children: [_jsx("span", { className: "tag", children: product.isVisible ? "Visible" : "Hidden" }), _jsx("span", { className: "tag", children: product.isAvailable ? "Available" : "Unavailable" }), product.isFeatured && _jsx("span", { className: "tag", children: "Featured" })] })] }), _jsxs("div", { className: "owner-product__actions", children: [_jsx("button", { className: "button-secondary", type: "button", onClick: () => editProduct(product), children: "Edit" }), _jsx("button", { className: "button-danger", type: "button", onClick: () => void deleteProduct(product), children: "Delete" })] })] }, product.id))) })) : (_jsx("p", { className: "products-empty", children: "No products in the catalog yet." }))] })] }));
+                                        }, children: "Remove image" })] }), _jsxs("fieldset", { className: "owner-form__options", children: [_jsx("legend", { children: "Product settings" }), _jsxs("label", { children: [_jsx("input", { type: "checkbox", checked: form.isAvailable, onChange: (event) => setForm({ ...form, isAvailable: event.target.checked }) }), " Available for ordering"] }), _jsxs("label", { children: [_jsx("input", { type: "checkbox", checked: form.isFeatured, onChange: (event) => setForm({ ...form, isFeatured: event.target.checked }) }), " Featured product"] }), _jsxs("label", { children: [_jsx("input", { type: "checkbox", checked: form.isVisible, onChange: (event) => setForm({ ...form, isVisible: event.target.checked }) }), " Visible in public catalog"] })] })] }), _jsx("div", { className: "owner-form__actions", children: _jsx("button", { className: "button-primary", type: "submit", disabled: saving, children: saving ? "Saving..." : editing ? "Save changes" : "Add product" }) })] }), _jsxs("section", { className: "owner-products", "aria-labelledby": "owner-products-title", children: [_jsxs("div", { className: "owner-form__heading", children: [_jsxs("div", { children: [_jsx("h2", { id: "owner-products-title", children: "Catalog products" }), _jsxs("p", { children: [products.length, " product", products.length === 1 ? "" : "s"] })] }), _jsx("button", { className: "button-secondary", type: "button", onClick: () => void loadData(), disabled: dataLoading, children: dataLoading ? "Loading..." : "Refresh" })] }), dataLoading && !products.length ? (_jsx("p", { role: "status", children: t("loading") })) : products.length ? (_jsx("div", { className: "owner-product-list", children: products.map((product) => (_jsxs("article", { className: "owner-product", children: [_jsx(ProductImage, { src: product.image, alt: product.name }), _jsxs("div", { className: "owner-product__details", children: [_jsx("span", { className: "product-card__category", children: product.category?.name ?? "Uncategorized" }), _jsx("h3", { children: product.name }), _jsxs("p", { children: ["\u20B9", product.price.toLocaleString("en-IN"), " \u00B7 ", product.stock, " in stock"] }), _jsxs("div", { className: "owner-product__tags", children: [_jsx("span", { className: "tag", children: product.isVisible ? "Visible" : "Hidden" }), _jsx("span", { className: "tag", children: product.isAvailable ? "Available" : "Unavailable" }), product.isFeatured && _jsx("span", { className: "tag", children: "Featured" })] })] }), _jsxs("div", { className: "owner-product__actions", children: [_jsx("button", { className: "button-secondary", type: "button", onClick: () => editProduct(product), children: "Edit" }), _jsx("button", { className: "button-danger", type: "button", onClick: () => void deleteProduct(product), children: "Delete" })] })] }, product.id))) })) : (_jsx("p", { className: "products-empty", children: "No products in the catalog yet." }))] })] }));
 };
 export default OwnerProductsPage;

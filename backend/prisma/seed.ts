@@ -87,6 +87,8 @@ async function main() {
         stock: product.stock,
         image: product.image,
         gallery: JSON.stringify(product.gallery),
+        isAvailable: true,
+        isVisible: true,
         category: { connect: { id: category.id } }
       }
     });

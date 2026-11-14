@@ -1,4 +1,14 @@
 const API_BASE = (import.meta.env.VITE_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
+const formatErrorMessage = (message) => {
+    if (typeof message === "string" && message)
+        return message;
+    if (typeof message !== "object" || message === null)
+        return undefined;
+    const details = Object.entries(message).flatMap(([field, value]) => Array.isArray(value)
+        ? value.filter((detail) => typeof detail === "string").map((detail) => `${field}: ${detail}`)
+        : []);
+    return details.length ? details.join("; ") : undefined;
+};
 const request = async (path, options = {}) => {
     const url = `${API_BASE}${path}`;
     const { method = "GET", token, body, query } = options;
@@ -40,8 +50,9 @@ const request = async (path, options = {}) => {
         const message = typeof data === "object" && data !== null && "message" in data
             ? data.message
             : undefined;
-        throw new Error(typeof message === "string" && message
-            ? `${message} (HTTP ${response.status})`
+        const formattedMessage = formatErrorMessage(message);
+        throw new Error(formattedMessage
+            ? `${formattedMessage} (HTTP ${response.status})`
             : `Request failed (HTTP ${response.status} ${response.statusText}).`);
     }
     return data;

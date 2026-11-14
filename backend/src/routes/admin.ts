@@ -123,6 +123,29 @@ const normalizeBoolean = (value: unknown) => {
   return value;
 };
 
+const normalizeProductText = (value: unknown, fallback: string) => {
+  if (typeof value === "undefined") return fallback;
+  return typeof value === "string" ? value.trim() || fallback : value;
+};
+
+const normalizeProductNumber = (value: unknown, fallback: number) =>
+  value === null || typeof value === "undefined" || (typeof value === "string" && !value.trim())
+    ? fallback
+    : Number(value);
+
+const normalizeCategoryId = (value: unknown) =>
+  value === null || typeof value === "undefined" || (typeof value === "string" && !value.trim())
+    ? null
+    : Number(value);
+
+const hasLegacyProductDetails = (body: Record<string, unknown>) =>
+  typeof body.name === "string" &&
+  body.name.trim().length >= 3 &&
+  typeof body.description === "string" &&
+  body.description.trim().length >= 10 &&
+  normalizeProductNumber(body.price, 0) > 0 &&
+  normalizeCategoryId(body.categoryId) !== null;
+
 const isKnownPrismaError = (error: unknown): error is Prisma.PrismaClientKnownRequestError =>
   error instanceof Prisma.PrismaClientKnownRequestError;
 
@@ -218,22 +241,23 @@ router.post("/products", requireOwner, uploadProductImageMiddleware, async (req,
     return res.status(400).json({ message: (error as Error).message });
   }
 
+  const defaultListingState = hasLegacyProductDetails(req.body);
   const payload = {
-    name: req.body.name,
-    description: req.body.description,
-    price: Number(req.body.price),
-    stock: Number(req.body.stock),
+    name: normalizeProductText(req.body.name, "Untitled product"),
+    description: normalizeProductText(req.body.description, ""),
+    price: normalizeProductNumber(req.body.price, 0),
+    stock: normalizeProductNumber(req.body.stock, 0),
     image: typeof req.body.image === "string" ? normalizeImageUrl(req.body.image.trim()) : "",
-    categoryId: Number(req.body.categoryId),
+    categoryId: normalizeCategoryId(req.body.categoryId),
     gallery: galleryList,
     ...(typeof req.body.isAvailable === "undefined"
-      ? {}
+      ? { isAvailable: defaultListingState }
       : { isAvailable: normalizeBoolean(req.body.isAvailable) }),
     ...(typeof req.body.isFeatured === "undefined"
       ? {}
       : { isFeatured: normalizeBoolean(req.body.isFeatured) }),
     ...(typeof req.body.isVisible === "undefined"
-      ? {}
+      ? { isVisible: defaultListingState }
       : { isVisible: normalizeBoolean(req.body.isVisible) })
   };
 
@@ -243,9 +267,14 @@ router.post("/products", requireOwner, uploadProductImageMiddleware, async (req,
   }
 
   try {
-    const category = await prisma.category.findUnique({ where: { id: parse.data.categoryId }, select: { id: true } });
-    if (!category) {
-      return res.status(400).json({ message: "Category not found" });
+    if (parse.data.categoryId !== null) {
+      const category = await prisma.category.findUnique({
+        where: { id: parse.data.categoryId },
+        select: { id: true }
+      });
+      if (!category) {
+        return res.status(400).json({ message: "Category not found" });
+      }
     }
     const imageUrl = req.file ? await saveImageAsset(req, req.file) : parse.data.image;
     const product = await prisma.product.create({
@@ -260,7 +289,9 @@ router.post("/products", requireOwner, uploadProductImageMiddleware, async (req,
         isAvailable: parse.data.isAvailable,
         isFeatured: parse.data.isFeatured,
         isVisible: parse.data.isVisible,
-        category: { connect: { id: parse.data.categoryId } }
+        ...(parse.data.categoryId === null
+          ? {}
+          : { category: { connect: { id: parse.data.categoryId } } })
       }
     });
     res.status(201).json(withParsedGallery(product));
@@ -286,11 +317,11 @@ router.put("/products/:id", requireOwner, uploadProductImageMiddleware, async (r
   }
 
   const payload: Record<string, unknown> = {};
-  if (typeof req.body.name !== "undefined") payload.name = req.body.name;
-  if (typeof req.body.description !== "undefined") payload.description = req.body.description;
-  if (typeof req.body.price !== "undefined") payload.price = Number(req.body.price);
-  if (typeof req.body.stock !== "undefined") payload.stock = Number(req.body.stock);
-  if (typeof req.body.categoryId !== "undefined") payload.categoryId = Number(req.body.categoryId);
+  if (typeof req.body.name !== "undefined") payload.name = normalizeProductText(req.body.name, "Untitled product");
+  if (typeof req.body.description !== "undefined") payload.description = normalizeProductText(req.body.description, "");
+  if (typeof req.body.price !== "undefined") payload.price = normalizeProductNumber(req.body.price, 0);
+  if (typeof req.body.stock !== "undefined") payload.stock = normalizeProductNumber(req.body.stock, 0);
+  if (typeof req.body.categoryId !== "undefined") payload.categoryId = normalizeCategoryId(req.body.categoryId);
   if (typeof req.body.image === "string") payload.image = normalizeImageUrl(req.body.image.trim());
   if (typeof galleryList !== "undefined") payload.gallery = galleryList;
   for (const field of ["isAvailable", "isFeatured", "isVisible"] as const) {
@@ -304,6 +335,11 @@ router.put("/products/:id", requireOwner, uploadProductImageMiddleware, async (r
 
   try {
     const updateData: Record<string, unknown> = { ...parse.data };
+    if (Object.prototype.hasOwnProperty.call(parse.data, "categoryId")) {
+      const categoryId = parse.data.categoryId;
+      delete updateData.categoryId;
+      updateData.category = categoryId === null ? { disconnect: true } : { connect: { id: categoryId } };
+    }
     if (req.file) {
       updateData.image = await saveImageAsset(req, req.file);
     }

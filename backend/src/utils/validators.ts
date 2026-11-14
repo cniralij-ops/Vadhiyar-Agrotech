@@ -81,26 +81,31 @@ export const otpCompleteSchema = z.object({
   state: z.string().min(2).optional()
 });
 
+const productNameSchema = z.preprocess(
+  (value) => typeof value === "string" && !value.trim() ? "Untitled product" : value,
+  z.string().trim().min(1)
+);
+
 export const productSchema = z.object({
-  name: z.string().min(3),
-  description: z.string().min(10),
-  price: z.number().positive(),
-  stock: z.number().int().nonnegative(),
+  name: productNameSchema.default("Untitled product"),
+  description: z.string().default(""),
+  price: z.number().finite().nonnegative().default(0),
+  stock: z.number().int().nonnegative().default(0),
   image: z.string().url().or(z.literal("")).default(""),
-  categoryId: z.number().int().positive(),
+  categoryId: z.number().int().positive().nullable().default(null),
   gallery: z.array(z.string().url()).optional(),
-  isAvailable: z.boolean().default(true),
+  isAvailable: z.boolean().default(false),
   isFeatured: z.boolean().default(false),
-  isVisible: z.boolean().default(true)
+  isVisible: z.boolean().default(false)
 });
 
 export const productUpdateSchema = z.object({
-  name: z.string().min(3).optional(),
-  description: z.string().min(10).optional(),
-  price: z.number().positive().optional(),
+  name: productNameSchema.optional(),
+  description: z.string().optional(),
+  price: z.number().finite().nonnegative().optional(),
   stock: z.number().int().nonnegative().optional(),
   image: z.string().url().or(z.literal("")).optional(),
-  categoryId: z.number().int().positive().optional(),
+  categoryId: z.number().int().positive().nullable().optional(),
   gallery: z.array(z.string().url()).optional(),
   isAvailable: z.boolean().optional(),
   isFeatured: z.boolean().optional(),

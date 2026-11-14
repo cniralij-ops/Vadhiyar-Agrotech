@@ -176,10 +176,6 @@ const ProductsPanel = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!token) return;
-    if (!form.image) {
-      setStatus("Please upload a product image before submitting.");
-      return;
-    }
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("description", form.description);
@@ -211,7 +207,7 @@ const ProductsPanel = () => {
       price: String(product.price),
       stock: String(product.stock),
       image: product.image,
-      categoryId: String(product.category.id)
+      categoryId: product.category ? String(product.category.id) : ""
     });
     setGalleryUrls(product.gallery ?? []);
     setThumbnailPreviewFromUrl(product.image);
@@ -271,7 +267,6 @@ const ProductsPanel = () => {
               className="input"
               value={form.name}
               onChange={(event) => handleChange("name", event.target.value)}
-              required
             />
           </div>
           <div style={{ display: "grid", gap: "0.5rem" }}>
@@ -282,7 +277,6 @@ const ProductsPanel = () => {
               rows={3}
               value={form.description}
               onChange={(event) => handleChange("description", event.target.value)}
-              required
             />
           </div>
           <div className="panel-grid">
@@ -295,7 +289,6 @@ const ProductsPanel = () => {
                 min="0"
                 value={form.price}
                 onChange={(event) => handleChange("price", event.target.value)}
-                required
               />
             </div>
             <div>
@@ -307,7 +300,6 @@ const ProductsPanel = () => {
                 min="0"
                 value={form.stock}
                 onChange={(event) => handleChange("stock", event.target.value)}
-                required
               />
             </div>
           </div>
@@ -352,9 +344,8 @@ const ProductsPanel = () => {
                 className="input"
                 value={form.categoryId}
                 onChange={(event) => handleChange("categoryId", event.target.value)}
-                required
               >
-                <option value="">Select category</option>
+                <option value="">No category</option>
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}

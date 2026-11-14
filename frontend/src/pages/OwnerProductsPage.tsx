@@ -24,12 +24,12 @@ const EMPTY_FORM: ProductForm = {
   name: "",
   description: "",
   price: "",
-  stock: "0",
+  stock: "",
   image: "",
   categoryId: "",
-  isAvailable: true,
+  isAvailable: false,
   isFeatured: false,
-  isVisible: true
+  isVisible: false
 };
 
 const OwnerProductsPage = () => {
@@ -108,9 +108,6 @@ const OwnerProductsPage = () => {
       ]);
       setProducts(productRows);
       setCategories(categoryRows);
-      setForm((previous) => previous.categoryId || !categoryRows.length
-        ? previous
-        : { ...previous, categoryId: String(categoryRows[0].id) });
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Products could not be loaded.");
     } finally {
@@ -137,7 +134,7 @@ const OwnerProductsPage = () => {
   };
 
   const resetForm = () => {
-    setForm({ ...EMPTY_FORM, categoryId: categories.length ? String(categories[0].id) : "" });
+    setForm(EMPTY_FORM);
     setEditing(null);
     setSelectedImage(null);
     replaceImagePreview(null);
@@ -153,7 +150,7 @@ const OwnerProductsPage = () => {
       price: String(product.price),
       stock: String(product.stock),
       image: product.image,
-      categoryId: String(product.category.id),
+      categoryId: product.category ? String(product.category.id) : "",
       isAvailable: product.isAvailable,
       isFeatured: product.isFeatured,
       isVisible: product.isVisible
@@ -205,10 +202,10 @@ const OwnerProductsPage = () => {
       const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
-        price: Number(form.price),
-        stock: Number(form.stock),
+        price: form.price.trim() ? Number(form.price) : 0,
+        stock: form.stock.trim() ? Number(form.stock) : 0,
         image,
-        categoryId: Number(form.categoryId),
+        categoryId: form.categoryId ? Number(form.categoryId) : null,
         isAvailable: form.isAvailable,
         isFeatured: form.isFeatured,
         isVisible: form.isVisible
@@ -220,7 +217,7 @@ const OwnerProductsPage = () => {
         await api.post("/api/admin/products", payload, token);
         setMessage("Product added.");
       }
-      setForm({ ...EMPTY_FORM, categoryId: categories.length ? String(categories[0].id) : "" });
+      setForm(EMPTY_FORM);
       setEditing(null);
       setSelectedImage(null);
       replaceImagePreview(null);
@@ -298,26 +295,26 @@ const OwnerProductsPage = () => {
         <div className="owner-form__grid">
           <label>
             Product name
-            <input required minLength={3} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+            <input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
           </label>
           <label>
             Category
-            <select required value={form.categoryId} onChange={(event) => setForm({ ...form, categoryId: event.target.value })}>
-              <option value="" disabled>Select a category</option>
+            <select value={form.categoryId} onChange={(event) => setForm({ ...form, categoryId: event.target.value })}>
+              <option value="">No category</option>
               {categories.map((category) => <option value={category.id} key={category.id}>{category.name}</option>)}
             </select>
           </label>
           <label>
             Price (₹)
-            <input type="number" min="0.01" step="0.01" required value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} />
+            <input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} />
           </label>
           <label>
             Stock quantity
-            <input type="number" min="0" step="1" required value={form.stock} onChange={(event) => setForm({ ...form, stock: event.target.value })} />
+            <input type="number" min="0" step="1" value={form.stock} onChange={(event) => setForm({ ...form, stock: event.target.value })} />
           </label>
           <label className="owner-form__wide">
             Description
-            <textarea required minLength={10} rows={4} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+            <textarea rows={4} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
           </label>
           <label className="owner-form__wide">
             Product image (JPG, PNG, WEBP · max 5 MB)
@@ -339,7 +336,7 @@ const OwnerProductsPage = () => {
           </fieldset>
         </div>
         <div className="owner-form__actions">
-          <button className="button-primary" type="submit" disabled={saving || !categories.length}>
+          <button className="button-primary" type="submit" disabled={saving}>
             {saving ? "Saving..." : editing ? "Save changes" : "Add product"}
           </button>
         </div>
@@ -363,7 +360,7 @@ const OwnerProductsPage = () => {
               <article className="owner-product" key={product.id}>
                 <ProductImage src={product.image} alt={product.name} />
                 <div className="owner-product__details">
-                  <span className="product-card__category">{product.category.name}</span>
+                  <span className="product-card__category">{product.category?.name ?? "Uncategorized"}</span>
                   <h3>{product.name}</h3>
                   <p>₹{product.price.toLocaleString("en-IN")} · {product.stock} in stock</p>
                   <div className="owner-product__tags">

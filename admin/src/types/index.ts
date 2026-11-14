@@ -7,7 +7,7 @@ export interface AdminProduct {
   stock: number;
   image: string;
   gallery?: string[];
-  category: { id: number; name: string; slug: string };
+  category: { id: number; name: string; slug: string } | null;
 }
 
 export interface AdminOrderItem {

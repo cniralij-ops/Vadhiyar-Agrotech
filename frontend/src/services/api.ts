@@ -7,6 +7,19 @@ type RequestOptions = {
   query?: URLSearchParams;
 };
 
+const formatErrorMessage = (message: unknown): string | undefined => {
+  if (typeof message === "string" && message) return message;
+  if (typeof message !== "object" || message === null) return undefined;
+
+  const details = Object.entries(message).flatMap(([field, value]) =>
+    Array.isArray(value)
+      ? value.filter((detail): detail is string => typeof detail === "string")
+        .map((detail) => `${field}: ${detail}`)
+      : []
+  );
+  return details.length ? details.join("; ") : undefined;
+};
+
 const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
   const url = `${API_BASE}${path}`;
   const { method = "GET", token, body, query } = options;
@@ -45,8 +58,9 @@ const request = async <T>(path: string, options: RequestOptions = {}): Promise<T
     const message = typeof data === "object" && data !== null && "message" in data
       ? data.message
       : undefined;
-    throw new Error(typeof message === "string" && message
-      ? `${message} (HTTP ${response.status})`
+    const formattedMessage = formatErrorMessage(message);
+    throw new Error(formattedMessage
+      ? `${formattedMessage} (HTTP ${response.status})`
       : `Request failed (HTTP ${response.status} ${response.statusText}).`);
   }
   return data as T;

@@ -32,18 +32,18 @@ model Category {
 
 model Product {
   id          Int        @id @default(autoincrement())
-  name        String
+  name        String     @default("Untitled product")
   slug        String     @unique
-  description String
-  price       Float
+  description String     @default("")
+  price       Float      @default(0)
   stock       Int        @default(0)
-  image       String
+  image       String     @default("")
   gallery     String     @default("[]")
-  isAvailable Boolean    @default(true)
+  isAvailable Boolean    @default(false)
   isFeatured  Boolean    @default(false)
-  isVisible   Boolean    @default(true)
-  categoryId  Int
-  category    Category   @relation(fields: [categoryId], references: [id])
+  isVisible   Boolean    @default(false)
+  categoryId  Int?
+  category    Category?  @relation(fields: [categoryId], references: [id])
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   orderItems  OrderItem[]

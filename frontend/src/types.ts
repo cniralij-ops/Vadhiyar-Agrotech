@@ -10,7 +10,7 @@
   isAvailable: boolean;
   isFeatured: boolean;
   isVisible: boolean;
-  category: { id: number; name: string; slug: string };
+  category: { id: number; name: string; slug: string } | null;
 }
 
 export interface Category {

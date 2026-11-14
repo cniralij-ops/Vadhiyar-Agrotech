@@ -4,7 +4,7 @@ import { api } from "../services/api";
 import ProductCard from "../components/ProductCard";
 import { Product } from "../types";
 import { useTranslation } from "../contexts/LanguageContext";
-import brandLogo from "../assets/vadhiyar-logo.jpeg";
+import farmHero from "../assets/farm-hero.jpg";
 import { BUSINESS_INFO } from "../data/businessInfo";
 
 const HomePage = () => {
@@ -39,10 +39,11 @@ const HomePage = () => {
         <div className="hero__visual">
           <div className="hero__circle">
             <img
-              src={brandLogo}
-              alt="Vadhiyar Agrotech logo"
-              className="hero__logo"
-              loading="lazy"
+              src={farmHero}
+              alt="Golden crops across a healthy farm at sunrise"
+              className="hero__photo"
+              loading="eager"
+              decoding="async"
             />
           </div>
         </div>
